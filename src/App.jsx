@@ -69,6 +69,7 @@ function DisplaySelect({floor,onChange}) {
 export default function App() {
   const [scenarioId,setScenarioId]=useState('evening')
   const [floor,setFloor]=useState('all')
+  const [view,setView]=useState('perspective')
   const [phase,setPhase]=useState('dusk')
   const [overrides,setOverrides]=useState({})
   const [selectedGroup,setSelectedGroup]=useState(null)
@@ -98,7 +99,7 @@ export default function App() {
     setScenarioId(id);setOverrides({});setTour(false)
   },[])
   const changeFloor=useCallback(id=>{
-    setFloor(id);setSelectedGroup(null);setAllGroups(false);setTour(false)
+    setFloor(id);setView('perspective');setSelectedGroup(null);setAllGroups(false);setTour(false)
   },[])
   const focusGroup=useCallback(id=>{
     if(!id){setSelectedGroup(null);return}
@@ -117,7 +118,7 @@ export default function App() {
     if(scenarioId==='off') chooseScene('evening')
     else chooseScene('off')
   },[scenarioId,chooseScene])
-  const resetCamera=useCallback(()=>setResetKey(i=>i+1),[])
+  const resetCamera=useCallback(()=>{setView('perspective');setResetKey(i=>i+1)},[])
   const screenshot=useCallback(()=>{
     const canvas=canvasRef.current
     if(!canvas)return
@@ -203,7 +204,7 @@ export default function App() {
 
       <section className="visual-stage" ref={stageRef}>
         <div className="canvas-layer">
-          <VillaCanvas floor={floor} levels={levels} selectedGroup={selectedGroup} onZoneSelect={focusGroup} phase={phase} tour={tour} resetKey={resetKey} onCanvasReady={c=>{canvasRef.current=c}} />
+          <VillaCanvas floor={floor} view={view} levels={levels} selectedGroup={selectedGroup} onZoneSelect={focusGroup} phase={phase} tour={tour} resetKey={resetKey} onCanvasReady={c=>{canvasRef.current=c}} />
         </div>
         <div className="stage-vignette"/>
         <div className="stage-title">
@@ -224,6 +225,10 @@ export default function App() {
           <button type="button" onClick={()=>setSelectedGroup(null)} aria-label="Снять выделение"><X size={16}/></button>
         </div>}
 
+        <div className="camera-presets" role="group" aria-label="Ракурс модели">
+          {[{id:'perspective',label:'Объём'},{id:'front',label:'Со двора'},{id:'back',label:'Сзади'},{id:'top',label:'Сверху'}].map(item=><button key={item.id} type="button" aria-pressed={view===item.id} onClick={()=>{setView(item.id);setTour(false)}}>{item.label}</button>)}
+        </div>
+
         <div className="stage-bottom">
           <div className="view-controls">
             <div className="control-tiny-title">ПРОСМОТР <span className="tiny-divider"/> {floor==='all'?'АРХИТЕКТУРА':getFloorName(Number(floor)).toUpperCase()}</div>
@@ -241,8 +246,8 @@ export default function App() {
         </div>
       </section>
       <div className="stage-footbar">
-        <div className="footbar-left"><span className="footbar-architect">MÈTRE</span><span>Планы и площади · документированы / фасады и участок · концепция</span></div>
-        <button type="button" className="footbar-right footbar-passport" onClick={()=>setShowLegend(true)}><span className="footer-status-dot"/> ПАСПОРТ МОДЕЛИ <span className="footbar-separator">/</span> v1.1</button>
+        <div className="footbar-left"><span className="footbar-architect">MÈTRE</span><span>Контуры по A-03–A-06 · планировка A-18–A-21 · фасады и кровли — интерпретация</span></div>
+        <button type="button" className="footbar-right footbar-passport" onClick={()=>setShowLegend(true)}><span className="footer-status-dot"/> ПАСПОРТ МОДЕЛИ <span className="footbar-separator">/</span> v2.0</button>
       </div>
     </main>
 
@@ -306,17 +311,17 @@ export default function App() {
         <button type="button" className="modal-close" onClick={()=>setShowLegend(false)} aria-label="Закрыть"><X size={20}/></button>
         <span className="section-kicker">VILLA COMO / DESIGN INTENT</span>
         <h2 id="about-title">О демонстрационной модели</h2>
-        <p>В основу взяты рабочие планы виллы MÈTRE. Ниже явно разделены данные проекта и презентационная интерпретация.</p>
+        <p>Модель сверена с 94-страничным PDF MÈTRE от 09.02.2026: обмеры A-03–A-06, мебель A-18–A-21 и свет A-34–A-37.</p>
         <div className="fidelity-grid">
           <article className="fidelity-card fidelity-card--source">
-            <FileCheck2 size={20}/><div><strong>Подтверждено листами</strong><p>Четыре уровня, состав помещений, площади, терраса 22,51 м² и ссылки на группы A-34–A-37.</p></div>
+            <FileCheck2 size={20}/><div><strong>Перенесено из проекта</strong><p>Контуры этажей, полукруглый эркер, Г-образная мансарда, 19 / 13 / 5 помещений, терраса 22,51 м², отметка 2 этажа +2,930 м и проёмы.</p></div>
           </article>
           <article className="fidelity-card fidelity-card--concept">
-            <WandSparkles size={20}/><div><strong>Художественная интерпретация</strong><p>Фасады, кровли, высоты, участок, ландшафт, мебель и точные координаты части световых маркеров.</p></div>
+            <WandSparkles size={20}/><div><strong>Требует фасадов и генплана</strong><p>Отделка фасадов, форма наружных кровель, участок и точная посадка зданий. Гараж справа под 90° и выход террасы во двор — по уточнению владельца.</p></div>
           </article>
         </div>
-        <div className="fidelity-note"><DraftingCompass size={16}/><span>Это showroom, не BIM-модель и не исполнительная схема электрики. Пометки «ориентир» требуют сверки по исходному PDF.</span></div>
-        <div className="about-facts"><span>4 уровня</span><span>16 групп демо</span><span>7 сценариев</span></div>
+        <div className="fidelity-note"><DraftingCompass size={16}/><span>Контуры оцифрованы по PDF с привязкой к размеру 10,080 м; строительная точность требует CAD-исходника и обмеров. Положение гаража и наличие выхода подтверждены владельцем; расстояние между зданиями и конструкция наружной лестницы приняты для демонстрации.</span></div>
+        <div className="about-facts"><span>3 этажа + гараж</span><span>16 групп демо</span><span>7 сценариев</span></div>
         <button type="button" className="modal-confirm" onClick={()=>setShowLegend(false)}>Понятно <Check size={17}/></button>
       </section>
     </div>}

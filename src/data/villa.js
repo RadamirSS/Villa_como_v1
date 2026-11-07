@@ -1,3 +1,5 @@
+import { planPoint, garageToWorld } from './architecture.js'
+
 /**
  * Villa Como demo data.
  *
@@ -20,23 +22,25 @@ export const FLOOR_AREAS = {
   3: '66,79 м²',
 }
 
+const position = pixel => { const [x,z]=planPoint(pixel);return {x,z} }
+const [garageX,garageZ]=garageToWorld([0,1.2])
 export const GROUPS = [
-  { id: 'living', label: 'Гостиная · основной свет', room: 'Гостиная 2', floor: 2, ref: 'A-36 · гр. 8.1–8.4', kind: 'main', x: 1.2, z: -2.8, radius: 3.7 },
-  { id: 'livingAccent', label: 'Гостиная · декоративный', room: 'Гостиная 2', floor: 2, ref: 'A-36 · гр. 8.5–8.9', kind: 'accent', x: 4.6, z: -0.2, radius: 2.4 },
-  { id: 'dining', label: 'Столовая · подвесы', room: 'Столовая', floor: 2, ref: 'A-36 · гр. 11.1–11.2', kind: 'main', x: 11.4, z: 3.25, radius: 2.2 },
-  { id: 'kitchen', label: 'Кухня · рабочий свет', room: 'Кухня', floor: 2, ref: 'A-36 · гр. 12.1–12.3', kind: 'main', x: 11.4, z: -3.5, radius: 2.1 },
-  { id: 'terrace', label: 'Терраса · атмосфера', room: 'Терраса / балкон', floor: 2, ref: 'A-36 · Б.1/Б.2 (ориентир)', kind: 'outdoor', x: 1.0, z: 4.1, radius: 3.1 },
-  { id: 'master', label: 'Мастер-спальня', room: 'Мастер-спальня', floor: 2, ref: 'A-36 · гр. 3.1–3.6 (ориентир)', kind: 'accent', x: -8.15, z: 3.0, radius: 2.35 },
-  { id: 'guests', label: 'Гостевые комнаты', room: 'Гостевые спальни', floor: 2, ref: 'A-36 · гр. 5/6 (ориентир)', kind: 'accent', x: -10.2, z: -4.1, radius: 2.4 },
-  { id: 'stairs', label: 'Холл и лестницы', room: 'Холл / лестница', floor: 2, ref: 'A-36 · гр. 7 (ориентир)', kind: 'main', x: 7.0, z: -0.4, radius: 1.65 },
-  { id: 'office', label: 'Кабинет · рабочий', room: 'Кабинет', floor: 1, ref: 'A-35 · гр. 11.1–11.4', kind: 'main', x: -0.7, z: -1.7, radius: 2.7 },
-  { id: 'entry', label: 'Парадная прихожая', room: 'Прихожая', floor: 1, ref: 'A-35 · гр. 10.1–10.2', kind: 'main', x: 5.0, z: 2.4, radius: 2.6 },
-  { id: 'apartment', label: 'Гостевые апартаменты', room: 'Апартаменты', floor: 1, ref: 'A-19, A-35 · демонстрац.', kind: 'accent', x: -10.8, z: 2.2, radius: 3.0 },
-  { id: 'staff', label: 'Помещения персонала', room: 'Зона персонала', floor: 1, ref: 'A-19, A-35 · демонстрац.', kind: 'main', x: 11.1, z: -0.5, radius: 2.7 },
-  { id: 'playroom', label: 'Игровая / детская', room: 'Детская / игровая', floor: 3, ref: 'A-37 · гр. 2.1–2.2', kind: 'accent', x: -10.7, z: 2.0, radius: 2.8 },
-  { id: 'upperBedroom', label: 'Спальня наверху', room: 'Спальня', floor: 3, ref: 'A-37 · гр. 3.1–3.2', kind: 'accent', x: -8.7, z: -3.6, radius: 2.5 },
-  { id: 'garage', label: 'Гараж · основной свет', room: 'Гараж', floor: 0, ref: 'A-34 · основное освещение', kind: 'main', x: -12.1, z: 13.9, radius: 3.8 },
-  { id: 'driveway', label: 'Въезд и дорожки', room: 'Территория', floor: 0, ref: 'A-34 · датчики ворот (ориентир)', kind: 'outdoor', x: -3.1, z: 12.7, radius: 3.0 },
+  { id: 'living', label: 'Гостиная · основной свет', room: 'Гостиная', floor: 2, ref: 'A-36 · гр. 8.1–8.6', kind: 'main', ...position([1008,472]), radius: 3.7 },
+  { id: 'livingAccent', label: 'Гостиная · декоративный', room: 'Гостиная · акценты', floor: 2, ref: 'A-36 · гр. 8.7–8.9', kind: 'accent', ...position([744,528]), radius: 2.4 },
+  { id: 'dining', label: 'Столовая · подвесы', room: 'Столовая', floor: 2, ref: 'A-36 · гр. 11.1–11.2', kind: 'main', ...position([1516,718]), radius: 2.2 },
+  { id: 'kitchen', label: 'Кухня · рабочий свет', room: 'Кухня', floor: 2, ref: 'A-36 · гр. 12.1–12.3', kind: 'main', ...position([1510,366]), radius: 2.1 },
+  { id: 'terrace', label: 'Терраса · атмосфера', room: 'Терраса · 22,51 м²', floor: 2, ref: 'A-36 · Б.1 (Б.2 — другой фасад)', kind: 'outdoor', ...position([915,710]), radius: 3.1 },
+  { id: 'master', label: 'Мастер-спальня', room: 'Мастер-спальня', floor: 2, ref: 'A-36 · гр. 3.1–3.6', kind: 'accent', ...position([543,711]), radius: 2.35 },
+  { id: 'guests', label: 'Гостевые комнаты', room: 'Гостевые спальни', floor: 2, ref: 'A-36 · гр. 5.1–5.2 / 7.1–7.2', kind: 'accent', ...position([340,300]), radius: 2.4 },
+  { id: 'stairs', label: 'Холл и лестницы', room: 'Холл / лестница', floor: 2, ref: 'A-36 · гр. 1.1–1.2 / 8.1–8.2', kind: 'main', ...position([1270,410]), radius: 1.65 },
+  { id: 'office', label: 'Кабинет · рабочий', room: 'Кабинет', floor: 1, ref: 'A-35 · гр. 11.1–11.4', kind: 'main', ...position([1005,473]), radius: 2.7 },
+  { id: 'entry', label: 'Парадная прихожая', room: 'Прихожая', floor: 1, ref: 'A-35 · гр. 10.1–10.2', kind: 'main', ...position([1280,665]), radius: 2.6 },
+  { id: 'apartment', label: 'Гостевые апартаменты', room: 'Апартаменты', floor: 1, ref: 'A-19, A-35 · демонстрац.', kind: 'accent', ...position([520,690]), radius: 3.0 },
+  { id: 'staff', label: 'Помещения персонала', room: 'Зона персонала', floor: 1, ref: 'A-35 · гр. 14–18 (укрупнённо)', kind: 'main', ...position([1547,560]), radius: 2.7 },
+  { id: 'playroom', label: 'Игровая / детская', room: 'Детская / игровая', floor: 3, ref: 'A-37 · гр. 2.1–2.2', kind: 'accent', ...position([541,670]), radius: 2.8 },
+  { id: 'upperBedroom', label: 'Спальня наверху', room: 'Спальня мансарды', floor: 3, ref: 'A-37 · гр. 3.1–3.2', kind: 'accent', ...position([881,339]), radius: 2.5 },
+  { id: 'garage', label: 'Гараж · основной свет', room: 'Гараж · уровень 1 этажа', floor: 0, ref: 'A-34 · основное освещение', kind: 'main', x:garageX, z:garageZ, radius: 3.8 },
+  { id: 'driveway', label: 'Въезд и дорожки', room: 'Двор', floor: 0, ref: 'Двор · демонстрац. (генплан не приложен)', kind: 'outdoor', x:14, z:17, radius: 3.0 },
 ]
 
 export const SCENARIOS = [

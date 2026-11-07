@@ -54,6 +54,12 @@ button:disabled{cursor:default}
 .model-tag-dot{width:5px;height:5px;background:#d5d7c6;box-shadow:none}
 .stage-icon{width:35px;height:35px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.26);border-radius:6px;background:rgba(30,40,42,.4);color:#fff5e8;backdrop-filter:blur(8px);transition:background .2s}
 .stage-icon:hover{background:rgba(23,30,31,.77)}
+.camera-presets{position:absolute;top:81px;right:30px;display:flex;gap:3px;padding:4px;border:1px solid #ffffff30;background:#1e282ab8;backdrop-filter:blur(10px);border-radius:7px}
+.camera-presets button{border:0;border-radius:4px;padding:7px 9px;background:transparent;color:#e4e1d6;font-size:9px}
+.camera-presets button[aria-pressed=true]{background:#d4bb96;color:#29332f}
+.camera-presets button:hover{background:#ffffff20}
+.camera-presets button[aria-pressed=true]:hover{background:#dcc6a8}
+.selected-zone-card{top:128px}
 .stage-bottom{position:absolute;bottom:25px;left:27px;right:27px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .view-controls{padding:15px 16px 16px;background:rgba(26,35,35,.83);border:1px solid rgba(240,231,214,.18);border-radius:11px;backdrop-filter:blur(13px)}
 .control-tiny-title{font-weight:700;font-size:9px;letter-spacing:1.75px;color:#efe4d1;display:flex;align-items:center;gap:8px;margin:0 0 12px 3px}
@@ -179,6 +185,7 @@ button:disabled{cursor:default}
 .mobile-backdrop{display:none}
 .modal-backdrop{position:fixed;inset:0;z-index:55;background:rgba(13,22,22,.66);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
 .about-modal{width:min(470px,100%);position:relative;background:#f7f5f1;border-radius:16px;padding:35px 36px;color:#39413e;box-shadow:0 30px 90px #101a1866}
+.about-modal{width:min(590px,100%);max-height:calc(100dvh - 40px);overflow-y:auto}
 .about-modal h2{font:400 32px Georgia,serif;margin:12px 0 16px}
 .about-modal p{font-size:13px;line-height:1.8;color:#6c746e}
 .fidelity-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:21px 0 13px}
@@ -245,6 +252,8 @@ button:disabled{cursor:default}
   .floor-selector::-webkit-scrollbar{display:none}
   .floor-pill{font-size:9px;min-height:30px;padding:0 9px}
   .selected-zone-card{top:94px;left:15px;right:auto;min-width:0;max-width:calc(100% - 30px)}
+  .camera-presets{top:115px;right:12px}
+  .selected-zone-card{top:157px}
   .selected-zone-card strong{font-size:10px}
   .stage-footbar{padding:0 12px;height:38px;min-height:38px}
   .footbar-left{gap:6px}
