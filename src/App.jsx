@@ -5,9 +5,10 @@ import {
   Lightbulb, Menu, Moon, MousePointer2, Pause, Play, Power, RotateCcw,
   SlidersHorizontal, Sparkles, Sun, Sunrise, Sunset, UtensilsCrossed, X,
   ZoomIn, CarFront, Building2, MapPin, ChevronUp, ShieldCheck,
+  FileCheck2, DraftingCompass, WandSparkles,
 } from 'lucide-react'
 import VillaCanvas from './components/VillaCanvas.jsx'
-import { FLOORS, FLOOR_AREAS, GROUPS, SCENARIOS, getFloorName, getLevels } from './data/villa.js'
+import { FLOORS, FLOOR_AREAS, GROUPS, SCENARIOS, getFloorName, getLevels, getSourceConfidence } from './data/villa.js'
 
 const SCENE_ICONS = {Sunrise,Sunset,UtensilsCrossed,Clapperboard,Moon,Lightbulb,Power}
 const PHASES = [
@@ -36,6 +37,7 @@ function ScenarioItem({scenario,active,onClick}) {
 }
 
 function LevelControl({group,level,onChange,onFocus,selected}) {
+  const confidence=getSourceConfidence(group)
   return <div className={'level-control '+(selected?'level-control--selected':'')}>
     <div className="level-head">
       <button className="level-name" type="button" onClick={onFocus} title={'Показать на модели: '+group.room}>
@@ -45,12 +47,13 @@ function LevelControl({group,level,onChange,onFocus,selected}) {
       </button>
       <span className="level-percent">{level}<small>%</small></span>
     </div>
-    <input className="level-range" type="range" min="0" max="100" step="5" value={level}
+    <input className="level-range" type="range" min="0" max="100" step="1" value={level}
       style={{'--level':level+'%'}}
       aria-label={'Яркость: '+group.label}
       onChange={e=>onChange(group.id,Number(e.target.value))}
     />
     <div className="level-caption"><span>{group.ref}</span><span>{level===0?'Выкл':level===100?'Максимум':'Диммирование'}</span></div>
+    <span className={'source-chip source-chip--'+confidence.id} title={confidence.detail}>{confidence.label}</span>
   </div>
 }
 
@@ -82,6 +85,7 @@ export default function App() {
   const levels=useMemo(()=>getLevels(scenarioId,overrides),[scenarioId,overrides])
   const scenario=SCENARIOS.find(s=>s.id===scenarioId)||SCENARIOS[0]
   const selected=GROUPS.find(g=>g.id===selectedGroup)
+  const selectedConfidence=selected?getSourceConfidence(selected):null
   const visibleGroups=useMemo(()=>{
     const available=floor==='all'?GROUPS:GROUPS.filter(g=>String(g.floor)===floor)
     return allGroups?available:available.slice(0,floor==='all'?7:9)
@@ -216,7 +220,7 @@ export default function App() {
 
         {selected && <div className="selected-zone-card">
           <span className="zone-card-icon"><Lightbulb size={16}/></span>
-          <div><small>ВЫБРАННАЯ ГРУППА</small><strong>{selected.label}</strong><span>{selected.ref} · {levels[selected.id]}%</span></div>
+          <div><small>ВЫБРАННАЯ ГРУППА</small><strong>{selected.label}</strong><span>{selected.ref} · {levels[selected.id]}%</span><em className={'zone-confidence zone-confidence--'+selectedConfidence.id}>{selectedConfidence.label}</em></div>
           <button type="button" onClick={()=>setSelectedGroup(null)} aria-label="Снять выделение"><X size={16}/></button>
         </div>}
 
@@ -237,8 +241,8 @@ export default function App() {
         </div>
       </section>
       <div className="stage-footbar">
-        <div className="footbar-left"><span className="footbar-architect">MÈTRE</span><span>Концепция по рабочим планам A-18–A-21, A-34–A-37</span></div>
-        <div className="footbar-right"><span className="footer-status-dot"/> 3D SHOWROOM <span className="footbar-separator">/</span> v1.0</div>
+        <div className="footbar-left"><span className="footbar-architect">MÈTRE</span><span>Планы и площади · документированы / фасады и участок · концепция</span></div>
+        <button type="button" className="footbar-right footbar-passport" onClick={()=>setShowLegend(true)}><span className="footer-status-dot"/> ПАСПОРТ МОДЕЛИ <span className="footbar-separator">/</span> v1.1</button>
       </div>
     </main>
 
@@ -302,8 +306,16 @@ export default function App() {
         <button type="button" className="modal-close" onClick={()=>setShowLegend(false)} aria-label="Закрыть"><X size={20}/></button>
         <span className="section-kicker">VILLA COMO / DESIGN INTENT</span>
         <h2 id="about-title">О демонстрационной модели</h2>
-        <p>В основу взяты рабочие планы виллы MÈTRE: три жилых этажа, гараж, терраса 22,51 м², комнаты и обозначения групп освещения.</p>
-        <p>Объём фасадов, кровли, благоустройство участка и часть координат светильников визуализированы концептуально. Модель не является точной BIM-копией и не заменяет электрические исполнительные схемы.</p>
+        <p>В основу взяты рабочие планы виллы MÈTRE. Ниже явно разделены данные проекта и презентационная интерпретация.</p>
+        <div className="fidelity-grid">
+          <article className="fidelity-card fidelity-card--source">
+            <FileCheck2 size={20}/><div><strong>Подтверждено листами</strong><p>Четыре уровня, состав помещений, площади, терраса 22,51 м² и ссылки на группы A-34–A-37.</p></div>
+          </article>
+          <article className="fidelity-card fidelity-card--concept">
+            <WandSparkles size={20}/><div><strong>Художественная интерпретация</strong><p>Фасады, кровли, высоты, участок, ландшафт, мебель и точные координаты части световых маркеров.</p></div>
+          </article>
+        </div>
+        <div className="fidelity-note"><DraftingCompass size={16}/><span>Это showroom, не BIM-модель и не исполнительная схема электрики. Пометки «ориентир» требуют сверки по исходному PDF.</span></div>
         <div className="about-facts"><span>4 уровня</span><span>16 групп демо</span><span>7 сценариев</span></div>
         <button type="button" className="modal-confirm" onClick={()=>setShowLegend(false)}>Понятно <Check size={17}/></button>
       </section>

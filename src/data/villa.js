@@ -78,3 +78,13 @@ export function getLevels(scenarioId, overrides = {}) {
 export function getFloorName(floor) {
   return floor === 0 ? 'Гараж' : floor === 1 ? '1 этаж' : floor === 2 ? '2 этаж' : '3 этаж'
 }
+
+export function getSourceConfidence(group) {
+  if (group.ref.includes('демонстрац.')) {
+    return { id: 'concept', label: 'Демо-группа', detail: 'Зонирование для презентации; электрическая группа не утверждается.' }
+  }
+  if (group.ref.includes('ориентир')) {
+    return { id: 'indicative', label: 'По плану · ориентир', detail: 'Помещение подтверждено планом; привязку группы нужно сверить по исходному листу.' }
+  }
+  return { id: 'documented', label: 'По рабочему листу', detail: 'Название и ссылка на группу перенесены из указанного рабочего листа.' }
+}
