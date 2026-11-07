@@ -511,7 +511,10 @@ export default function VillaCanvas({floor,levels,selectedGroup,onZoneSelect,pha
     {isAll && <BuildingMassing levels={levels}/>}
     {isAll && <Garage levels={levels}/>}
     {!isAll && !isGarage && <PlanView floor={Number(floor)} levels={levels} selectedGroup={selectedGroup} onZoneSelect={onZoneSelect}/>}
-    {isGarage && <Garage levels={levels} plan/>}
+    {isGarage && <group>
+      <Garage levels={levels} plan/>
+      {GROUPS.filter(g=>g.floor===0).map(g=><RoomLight key={g.id} group={g} y={Y[0]} level={levels[g.id]} active={g.id===selectedGroup} onSelect={onZoneSelect}/>)}
+    </group>}
     <ContactShadows opacity={.25} scale={50} blur={2.8} far={25} position={[0,-.015,2]} color="#32332f"/>
     <CameraRig floor={floor} resetKey={resetKey} tour={tour}/>
   </Canvas>
