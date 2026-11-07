@@ -255,6 +255,7 @@ function SpiralStairs({point,y,height,radius}) {
 function RoomLight({group,level,y,selected,onSelect,labels=true}) {
   const lit=level/100
   return <group position={[group.x,y+.13,group.z]}>
+    {group.floor===0 && <mesh rotation={[-Math.PI/2,0,0]} onClick={e=>{e.stopPropagation();onSelect(group.id)}} onPointerOver={()=>{document.body.style.cursor='pointer'}} onPointerOut={()=>{document.body.style.cursor='auto'}}><circleGeometry args={[Math.min(group.radius*.65,2.1),40]}/><meshBasicMaterial color="#f7c57e" transparent opacity={.03+lit*.15+(selected?.08:0)} depthWrite={false} side={THREE.DoubleSide}/></mesh>}
     <mesh rotation={[-Math.PI/2,0,0]} onClick={e=>{e.stopPropagation();onSelect(group.id)}} onPointerOver={()=>{document.body.style.cursor='pointer'}} onPointerOut={()=>{document.body.style.cursor='auto'}}><ringGeometry args={[.19,.27,24]}/><meshBasicMaterial color={selected?'#e99a45':lit>0?'#eec082':'#9eaaa4'} side={THREE.DoubleSide} depthWrite={false}/></mesh>
     <mesh position={[0,.06,0]}><sphereGeometry args={[.095,12,8]}/><meshStandardMaterial color={lit>0?'#ffda9c':'#94a29c'} emissive="#ffbd68" emissiveIntensity={lit*3}/></mesh>
     {labels&&<Html center position={[0,.52,0]} distanceFactor={19} style={{whiteSpace:'nowrap',pointerEvents:'none'}}><div className={'model-room-label'+(selected?' is-active':'')}><span className="model-room-light" style={{opacity:lit>.01?1:.2}}/><span>{group.room}</span><b>{level}%</b></div></Html>}
