@@ -247,7 +247,7 @@ export default function App() {
       </section>
       <div className="stage-footbar">
         <div className="footbar-left"><span className="footbar-architect">MÈTRE</span><span>Контуры по A-03–A-06 · планировка A-18–A-21 · фасады и кровли — интерпретация</span></div>
-        <button type="button" className="footbar-right footbar-passport" onClick={()=>setShowLegend(true)}><span className="footer-status-dot"/> ПАСПОРТ МОДЕЛИ <span className="footbar-separator">/</span> v2.0</button>
+        <button type="button" className="footbar-right footbar-passport" onClick={()=>setShowLegend(true)}><span className="footer-status-dot"/> ПАСПОРТ МОДЕЛИ <span className="footbar-separator">/</span> v2.1</button>
       </div>
     </main>
 
@@ -317,10 +317,10 @@ export default function App() {
             <FileCheck2 size={20}/><div><strong>Перенесено из проекта</strong><p>Контуры этажей, полукруглый эркер, Г-образная мансарда, 19 / 13 / 5 помещений, терраса 22,51 м², отметка 2 этажа +2,930 м и проёмы.</p></div>
           </article>
           <article className="fidelity-card fidelity-card--concept">
-            <WandSparkles size={20}/><div><strong>Требует фасадов и генплана</strong><p>Отделка фасадов, форма наружных кровель, участок и точная посадка зданий. Гараж справа под 90° и выход террасы во двор — по уточнению владельца.</p></div>
+            <WandSparkles size={20}/><div><strong>По уточнениям владельца</strong><p>Гараж справа под 90°, на уровне 1 этажа. Двор на уровне 2 этажа, выход с верхней террасы без наружной лестницы. У кабинета — нижняя терраска и 4 ступени на всю её ширину; сзади 1 этаж примыкает к склону.</p></div>
           </article>
         </div>
-        <div className="fidelity-note"><DraftingCompass size={16}/><span>Контуры оцифрованы по PDF с привязкой к размеру 10,080 м; строительная точность требует CAD-исходника и обмеров. Положение гаража и наличие выхода подтверждены владельцем; расстояние между зданиями и конструкция наружной лестницы приняты для демонстрации.</span></div>
+        <div className="fidelity-note"><DraftingCompass size={16}/><span>Контуры оцифрованы по PDF с привязкой к размеру 10,080 м. Фасады, кровли, размеры нижней терраски, форма склона, ровный переход к двору, подпорные стены и съезд к гаражу — демонстрационная интерпретация: фасады, разрезы и топосъёмка не приложены.</span></div>
         <div className="about-facts"><span>3 этажа + гараж</span><span>16 групп демо</span><span>7 сценариев</span></div>
         <button type="button" className="modal-confirm" onClick={()=>setShowLegend(false)}>Понятно <Check size={17}/></button>
       </section>

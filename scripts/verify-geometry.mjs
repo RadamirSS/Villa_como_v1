@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { ShapeUtils, Vector2 } from 'three'
-import { FOOTPRINTS, GARAGE, GARAGE_GATES, GARAGE_OUTLINE, LEVELS, MAIN_ROOF, OPENINGS, ROOMS, STAIR_OPENINGS, TERRACE, garageToWorld, polygonArea } from '../src/data/architecture.js'
+import { COURTYARD_OUTLINE, FOOTPRINTS, GARAGE, GARAGE_GATES, GARAGE_OUTLINE, LEVELS, MAIN_ROOF, OPENINGS, ROOMS, SITE, STAIR_OPENINGS, STUDY_TERRACE, TERRACE, TERRACE_LINK, approachRampY, garageToWorld, polygonArea, terrainY } from '../src/data/architecture.js'
 import { GROUPS, SCENARIOS, getLevels } from '../src/data/villa.js'
 
 function cross(a,b,c) { return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]) }
@@ -85,15 +85,29 @@ for(const gate of GARAGE_GATES){
   assert(x>houseRight&&z>6.5,'Each gate must open to the courtyard, clear of the house')
 }
 assert(Math.abs(TERRACE.width*TERRACE.depth-22.51)<1e-8,'Terrace area must be 22.51 square metres')
-const bottom=TERRACE.front+TERRACE.stairSteps*TERRACE.stairTread
-assert(bottom<12&&bottom>8,'Terrace stair must reach the courtyard pavement')
-for(let z=TERRACE.front+.1;z<=bottom;z+=.1)for(const side of [-1,1]){
-  assert(!inside([TERRACE.exitX+side*TERRACE.stairWidth/2,z],FOOTPRINTS[1]),'Terrace stair intersects the house')
+assert.equal(SITE.courtyardY,LEVELS[2],'Courtyard must be at second-floor elevation, without an exterior flight')
+assert.equal(STUDY_TERRACE.y,LEVELS[1],'Study terrace must be at first-floor elevation')
+assert.equal(STUDY_TERRACE.steps,4,'Study entrance must have exactly four broad steps')
+assert.equal(STUDY_TERRACE.width,TERRACE.width,'Steps must span the entire lower terrace')
+assert(Math.abs(STUDY_TERRACE.y-STUDY_TERRACE.steps*STUDY_TERRACE.riser-SITE.lowerGardenY)<1e-8,'Fourth step must meet the lower garden')
+for(let z=STUDY_TERRACE.front+.05;z<STUDY_TERRACE.front+4*STUDY_TERRACE.tread;z+=.1)for(const x of [STUDY_TERRACE.x+.15,STUDY_TERRACE.x+STUDY_TERRACE.width-.15]){
+  assert(!inside([x,z],FOOTPRINTS[1]),'Study steps intersect the house')
 }
+for(const [label,polygon] of [['Courtyard',COURTYARD_OUTLINE],['Level terrace access',TERRACE_LINK]]){
+  simple(polygon,label)
+  for(const floor of [1,2])assert(overlapArea(polygon,FOOTPRINTS[floor])<1e-7,label+' intersects the house')
+}
+assert(TERRACE_LINK.some(p=>Math.abs(p[1]-TERRACE.front)<1e-8),'Level access must start at the upper terrace edge')
+assert(overlapArea(COURTYARD_OUTLINE,TERRACE_LINK)<1e-7,'Courtyard and access deck must not overlap')
+assert(SITE.courtyardY-.18>STUDY_TERRACE.y+2.5,'Access deck must leave headroom above study terrace/steps')
+assert.equal(approachRampY(SITE.rampStart),SITE.courtyardY,'Garage approach must join the upper courtyard')
+assert(Math.abs(approachRampY(SITE.rampEnd)-SITE.garageApproachY)<1e-8,'Garage approach must meet the lower apron')
+assert(terrainY(0,-7.4)===LEVELS[2]&&terrainY(0,-20)>LEVELS[2],'Rear first-floor facade must meet rising hillside')
+assert(!('stairSteps' in TERRACE),'There must be no exterior flight to the second-floor terrace')
 for(const group of GROUPS.filter(g=>g.floor>0&&g.id!=='terrace'))assert(inside([group.x,group.z],FOOTPRINTS[group.floor]),'Lighting marker outside its floor: '+group.id)
 for(const scene of SCENARIOS){
   const values=Object.values(getLevels(scene.id));assert(values.length===GROUPS.length&&values.every(v=>v>=0&&v<=100),'Invalid scene '+scene.id)
 }
 assert(Object.values(getLevels('off')).every(v=>v===0))
 assert(Object.values(getLevels('full')).every(v=>v===100))
-console.log('Geometry verified: non-overlapping rooms/roof faces, roof coverage, stair openings, source levels/areas, garage placement/gates, terrace stair clearance and lighting zones.')
+console.log('Geometry verified: rooms/roofs, openings, source levels/areas, garage placement/gates, four full-width study steps, level upper-terrace access, raised courtyard, rear hillside and lighting zones.')

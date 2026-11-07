@@ -40,7 +40,7 @@ export const GROUPS = [
   { id: 'playroom', label: 'Игровая / детская', room: 'Детская / игровая', floor: 3, ref: 'A-37 · гр. 2.1–2.2', kind: 'accent', ...position([541,670]), radius: 2.8 },
   { id: 'upperBedroom', label: 'Спальня наверху', room: 'Спальня мансарды', floor: 3, ref: 'A-37 · гр. 3.1–3.2', kind: 'accent', ...position([881,339]), radius: 2.5 },
   { id: 'garage', label: 'Гараж · основной свет', room: 'Гараж · уровень 1 этажа', floor: 0, ref: 'A-34 · основное освещение', kind: 'main', x:garageX, z:garageZ, radius: 3.8 },
-  { id: 'driveway', label: 'Въезд и дорожки', room: 'Двор', floor: 0, ref: 'Двор · демонстрац. (генплан не приложен)', kind: 'outdoor', x:14, z:17, radius: 3.0 },
+  { id: 'driveway', label: 'Въезд и дорожки', room: 'Подъезд к гаражу', floor: 0, ref: 'Участок · демонстрац. (генплан не приложен)', kind: 'outdoor', x:16, z:22, radius: 3.0 },
 ]
 
 export const SCENARIOS = [

@@ -10,7 +10,9 @@ This repository contains **a visual client demo**, not a CAD/BIM conversion or a
 
 The supplied 94-page PDF has now been inspected directly: the measured, furniture and lighting plans were rendered and visually compared. See [MODEL_AUDIT.md](MODEL_AUDIT.md) for the source-by-source findings, numerical checks and remaining uncertainty. `src/data/architecture.js` replaces the former independent rectangles with calibrated floor traces, room polygons, openings and common elevations.
 
-The garage is a separate one-storey building **to the right when facing the house from the courtyard**, turned 90 degrees, with three gates facing the courtyard. Its floor is at the first-floor elevation; the navigation ID `0` means garage, not basement. The terrace's courtyard access is represented by a connected external stair. Site orientation and access were clarified by the owner; building separation and stair construction remain assumptions.
+The garage is a separate one-storey building **to the right when facing the house from the courtyard**, turned 90 degrees, with three gates facing the courtyard. Its floor is at the first-floor elevation; the navigation ID `0` means garage, not basement.
+
+The owner's subsequent clarification supersedes the previous exterior-stair interpretation: **there is no stair to the second-floor terrace**. The main courtyard is at level 2, with level access from the upper terrace. A separate small terrace at the level-1 study entrance has **four steps spanning its full width**. The rear of level 1 abuts the hillside; the ground rises behind the house. These relationships are owner-supplied, not inferred from the interior PDF. Exact lower-terrace dimensions, step rise/run, site contours, retaining walls, access-deck shape and the descent to the lower garage apron are illustrative pending a topographic survey and building sections. The connecting deck leaves the study terrace/steps clear below; raised terrain is hidden in floor-isolation mode so it cannot obscure the interior plans.
 
 ### Architectural references
 

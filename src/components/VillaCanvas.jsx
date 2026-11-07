@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { GROUPS } from '../data/villa.js'
-import { FOOTPRINTS, GARAGE, GARAGE_GATES, GARAGE_OUTLINE, LEVELS, MAIN_ROOF, OPENINGS, ROOMS, STAIR_OPENINGS, TERRACE, WALL_HEIGHT, planPoint, pointInPolygon } from '../data/architecture.js'
+import { COURTYARD_OUTLINE, FOOTPRINTS, GARAGE, GARAGE_GATES, GARAGE_OUTLINE, LEVELS, MAIN_ROOF, OPENINGS, ROOMS, SITE, STAIR_OPENINGS, STUDY_TERRACE, TERRACE, TERRACE_LINK, WALL_HEIGHT, approachRampY, planPoint, pointInPolygon, terrainY } from '../data/architecture.js'
 
 const M={wall:'#e0d7c5',stone:'#baad98',trim:'#f3ead9',roof:'#8b6654',wood:'#8e7358',metal:'#424c48',floor:'#d8c9b4'}
 const P=planPoint
@@ -22,6 +22,27 @@ function Plate({points,y,depth=.24,color=M.floor,onClick,holes=[]}) {
   },[points,depth,holes])
   useEffect(()=>()=>geometry.dispose(),[geometry])
   return <mesh geometry={geometry} position={[0,y-depth,0]} castShadow receiveShadow onClick={onClick}><meshStandardMaterial color={color} roughness={.9}/></mesh>
+}
+function TerrainSolid({points,height,bottom=-.62,color='#7c866d',sideColor='#8a816c'}) {
+  const geometry=useMemo(()=>{
+    const positions=[],indices=THREE.ShapeUtils.triangulateShape(points.map(p=>new THREE.Vector2(...p)),[])
+    const heights=points.map(([x,z])=>typeof height==='function'?height(x,z):height)
+    const push=(a,b,c)=>positions.push(...a,...b,...c)
+    for(const triangle of indices){
+      const [a,b,c]=triangle.map(i=>[points[i][0],heights[i],points[i][1]])
+      const normal=new THREE.Vector3().crossVectors(new THREE.Vector3(...b).sub(new THREE.Vector3(...a)),new THREE.Vector3(...c).sub(new THREE.Vector3(...a)))
+      if(normal.y<0)push(a,c,b);else push(a,b,c)
+    }
+    const topCount=positions.length/3
+    points.forEach((a,i)=>{
+      const j=(i+1)%points.length,b=points[j]
+      push([a[0],heights[i],a[1]],[b[0],bottom,b[1]],[a[0],bottom,a[1]])
+      push([a[0],heights[i],a[1]],[b[0],heights[j],b[1]],[b[0],bottom,b[1]])
+    })
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.addGroup(0,topCount,0);g.addGroup(topCount,positions.length/3-topCount,1);g.computeVertexNormals();return g
+  },[points,height,bottom])
+  useEffect(()=>()=>geometry.dispose(),[geometry])
+  return <mesh geometry={geometry} castShadow receiveShadow><meshStandardMaterial attach="material-0" color={color} roughness={1}/><meshStandardMaterial attach="material-1" color={sideColor} roughness={1} side={THREE.DoubleSide}/></mesh>
 }
 function Beam({from,to,width=.06,color=M.metal}) {
   const a=new THREE.Vector3(...from),b=new THREE.Vector3(...to),v=b.clone().sub(a)
@@ -132,12 +153,13 @@ function BayRoof({y}) {
 }
 function House({levels}) {
   return <group>
+    <Plate points={FOOTPRINTS[1]} y={LEVELS[1]-.28} depth={LEVELS[1]-.28-SITE.lowerGardenY} color={M.stone}/>
     {[1,2].map(f=><group key={f}>
       <Plate points={FOOTPRINTS[f]} y={LEVELS[f]} depth={.28} color="#c5b7a1"/>
       <Perimeter points={FOOTPRINTS[f]} y={LEVELS[f]} height={WALL_HEIGHT[f]} openings={OPENINGS[f]} levels={levels}/>
       <Perimeter points={FOOTPRINTS[f]} y={LEVELS[f]+WALL_HEIGHT[f]} height={.13} thickness={.37} color={M.trim}/>
     </group>)}
-    <HouseRoof/><Terrace levels={levels}/><TerraceStairs/><EntranceSteps/>
+    <HouseRoof/><Terrace levels={levels}/><StudyTerrace/>
   </group>
 }
 function Rail({a,b,y,height=.98}) {
@@ -150,30 +172,29 @@ function Rail({a,b,y,height=.98}) {
 }
 function Terrace({levels}) {
   const t=TERRACE,y=LEVELS[2],right=t.x+t.width,lit=(levels.terrace||0)/100
-  const points=[[t.x,t.z],[right,t.z],[right,t.front],[t.x,t.front]],exitL=t.exitX-t.stairWidth/2,exitR=t.exitX+t.stairWidth/2
+  const points=[[t.x,t.z],[right,t.z],[right,t.front],[t.x,t.front]],exitL=t.accessLeft
   return <group>
     <Plate points={points} y={y} depth={.25} color="#b5a287"/>
     {Array.from({length:17},(_,i)=><Box key={i} at={[t.x+(i+.5)*t.width/17,y+.008,t.z+t.depth/2]} size={[.013,.01,t.depth]} color="#a89377"/>)}
-    <Rail a={[t.x,t.front]} b={[exitL,t.front]} y={y}/><Rail a={[exitR,t.front]} b={[right,t.front]} y={y}/>
+    <Rail a={[t.x,t.front]} b={[exitL,t.front]} y={y}/>
+    <Rail a={[t.accessRight,t.front]} b={[right,t.front]} y={y}/>
     <Rail a={[t.x,t.z]} b={[t.x,t.front]} y={y}/>
     <Sofa x={t.x+2.2} z={t.z+.65} y={y} scale={.85}/><Table x={t.x+3.2} z={t.z+1.65} y={y} small/>
     <Plant x={t.x+.5} z={t.front-.45} y={y} scale={.7}/><Plant x={right-.38} z={t.z+.4} y={y} scale={.55}/>
-    {[t.x+1,t.x+4.4,right-.25].map((x,i)=><group key={i}><Box at={[x,y+.17,t.front-.15]} size={[.12,.34,.12]} color={M.metal}/><Box at={[x,y+.36,t.front-.15]} size={[.13,.055,.13]} color="#ead7af" emissive={lit*2}/></group>)}
-    {[t.x+.18,t.x+t.width/2,right-.18].map((x,i)=><Box key={i} at={[x,y/2-.13,t.front-.17]} size={[.22,y-.26,.22]} color={M.stone}/>)}
+    {[t.x+1,t.x+4.4].map((x,i)=><group key={i}><Box at={[x,y+.17,t.front-.15]} size={[.12,.34,.12]} color={M.metal}/><Box at={[x,y+.36,t.front-.15]} size={[.13,.055,.13]} color="#ead7af" emissive={lit*2}/></group>)}
+    {[t.x+.18,t.x+t.width/2,right-.18].map((x,i)=>{const h=y-.25-LEVELS[1];return <Box key={i} at={[x,LEVELS[1]+h/2,t.front-.17]} size={[.22,h,.22]} color={M.stone}/>})}
   </group>
 }
-function TerraceStairs() {
-  const t=TERRACE,top=LEVELS[2],riser=top/t.stairSteps,run=t.stairSteps*t.stairTread
+function StudyTerrace() {
+  const t=STUDY_TERRACE,right=t.x+t.width
   return <group>
-    {Array.from({length:t.stairSteps},(_,i)=>{const h=top-i*riser,z=t.front+(i+.5)*t.stairTread;return <Box key={i} at={[t.exitX,h/2,z]} size={[t.stairWidth,h,t.stairTread]} color={i%2?'#c6b89f':'#ccbea6'}/>})}
-    <Box at={[t.exitX,.035,t.front+run+.65]} size={[t.stairWidth+.5,.07,1.3]} color="#b7ae9c"/>
-    {[-1,1].map(side=>{const x=t.exitX+side*(t.stairWidth/2+.025);return <group key={side}>
-      <Beam from={[x,top+1,t.front]} to={[x,1,t.front+run]} width={.055}/>
-      {Array.from({length:7},(_,i)=>{const s=i/6;return <Beam key={i} from={[x,top*(1-s),t.front+run*s]} to={[x,top*(1-s)+1,t.front+run*s]} width={.035}/>})}
-    </group>})}
+    <Plate points={[[t.x,t.z],[right,t.z],[right,t.front],[t.x,t.front]]} y={t.y} depth={.22} color="#c9bba3"/>
+    {Array.from({length:t.steps},(_,i)=>{
+      const top=t.y-(i+1)*t.riser,base=SITE.lowerGardenY-.1,h=top-base
+      return <Box key={i} at={[t.x+t.width/2,base+h/2,t.front+(i+.5)*t.tread]} size={[t.width,h,t.tread]} color={i%2?'#c6b89f':'#d5c7af'}/>
+    })}
   </group>
 }
-function EntranceSteps() {const [x,z]=P([1270,776]);return <Box at={[x,.06,z+.4]} size={[2.35,.12,.8]} color={M.stone}/>}
 
 function Sofa({x,z,y,rotation=0,scale=1}) {
   return <group position={[x,y,z]} rotation={[0,rotation,0]} scale={scale}>
@@ -273,7 +294,8 @@ function FloorPlan({floor,levels,selectedGroup,onZoneSelect}) {
       </group>
     })}
     <Perimeter points={FOOTPRINTS[floor]} y={y} height={.72} thickness={.25}/><InteriorPartitions floor={floor}/><PlanFurniture floor={floor}/>
-    {floor===2&&<><Terrace levels={levels}/><TerraceStairs/></>}
+    {floor===2&&<Terrace levels={levels}/>}
+    {floor===1&&<StudyTerrace/>}
     {GROUPS.filter(g=>g.floor===floor).map(g=><RoomLight key={g.id} group={g} y={y} level={levels[g.id]} selected={g.id===selectedGroup} onSelect={onZoneSelect}/>)}
   </group>
 }
@@ -313,18 +335,43 @@ function Garage({levels,plan=false,selectedGroup,onZoneSelect}) {
     {plan&&GROUPS.filter(group=>group.floor===0).map(group=><RoomLight key={group.id} group={group} y={y} level={levels[group.id]} selected={group.id===selectedGroup} onSelect={onZoneSelect}/>)}
   </group>
 }
-function Tree({x,z,scale=1}) {
-  return <group position={[x,0,z]} scale={scale}><mesh position={[0,1,0]} castShadow><cylinderGeometry args={[.12,.22,2,8]}/><meshStandardMaterial color="#85705a"/></mesh><mesh position={[0,2.8,0]} castShadow><icosahedronGeometry args={[1.3,2]}/><meshStandardMaterial color="#738267" roughness={1}/></mesh><mesh position={[.65,2.7,.2]} castShadow><icosahedronGeometry args={[.8,2]}/><meshStandardMaterial color="#62765a" roughness={1}/></mesh></group>
+function Tree({x,z,scale=1,cutaway=false}) {
+  return <group position={[x,cutaway?SITE.lowerGardenY:terrainY(x,z),z]} scale={scale}><mesh position={[0,1,0]} castShadow><cylinderGeometry args={[.12,.22,2,8]}/><meshStandardMaterial color="#85705a"/></mesh><mesh position={[0,2.8,0]} castShadow><icosahedronGeometry args={[1.3,2]}/><meshStandardMaterial color="#738267" roughness={1}/></mesh><mesh position={[.65,2.7,.2]} castShadow><icosahedronGeometry args={[.8,2]}/><meshStandardMaterial color="#62765a" roughness={1}/></mesh></group>
 }
-function Grounds({levels}) {
+function Grounds({levels,cutaway=false}) {
+  const t=TERRACE,left=t.x,right=t.x+t.width,back=P([202,194])[1],front=P([202,864])[1]
+  const rearBench=[[-28,-7.4],[40,-7.4],[40,back],P([1407,194]),P([1407,148]),P([834,148]),P([834,194]),[-28,back]]
+  const leftSlope=[[-28,back],P([202,194]),...FOOTPRINTS[1].slice(-13).reverse(),P([202,864]),[-28,front]]
+  const rightSlope=[P([1647,194]),[40,back],[40,1.5],[P([1682,412])[0],1.5],P([1682,412]),P([1647,412])]
+  const lowerGarden=[[-28,front],[left,front],[left,STUDY_TERRACE.z],[right,STUDY_TERRACE.z],[right,front],[13.2,front],[13.2,42],[-28,42]]
   return <group>
-    <Box at={[6,-.43,7]} size={[68,.7,60]} color="#7c866d"/>
-    <Plate points={[[-7.5,6.5],[-4,6.5],[-4,4.5],[6,4.5],[6,6.5],[19.5,6.5],[19.5,20.5],[20,20.5],[20,27.5],[12,27.5],[12,21.5],[-7.5,21.5]]} y={.02} depth={.09} color="#bdb4a1"/>
-    {Array.from({length:19},(_,i)=><Box key={i} at={[-7.5+i*1.5,.023,14]} size={[.018,.006,15]} color="#aaa18d"/>)}
-    {[-23,-19,33,37].flatMap((x,i)=>[-12,-4,5,15,26].map((z,j)=><Tree key={i+','+j} x={x} z={z} scale={.85+(i+j)%3*.12}/>))}
-    {[-14,-8,-2,5,12,20,28].map((x,i)=><Tree key={i} x={x} z={-13} scale={.72}/>)}
-    {[[-5,10],[-5,17],[4,19],[12,19],[19,22]].map(([x,z],i)=><group key={i}><Box at={[x,.37,z]} size={[.15,.74,.15]} color={M.metal}/><Box at={[x,.76,z]} size={[.17,.065,.17]} color="#e5c592" emissive={levels.driveway/100*2}/></group>)}
-    <Box at={[6,.14,-10.6]} size={[46,.4,.55]} color="#b5aa95"/>
+    <Box at={[6,-1.9,7]} size={[68,2.56,70]} color="#7c866d"/>
+    <Plate points={lowerGarden} y={SITE.lowerGardenY} depth={.16} color="#7c866d"/>
+    <Plate points={[[13.2,1.5],[40,1.5],[40,42],[13.2,42]]} y={SITE.garageApproachY} depth={.76} color="#8b927b"/>
+    <Plate points={[[13.2,6.5],[19.1,6.5],[19.1,39],[13.2,39]]} y={SITE.garageApproachY+.008} depth={.04} color="#b5b09f"/>
+    {!cutaway&&<>
+      <TerrainSolid points={[[-28,-28],[40,-28],[40,-7.4],[-28,-7.4]]} height={(x,z)=>terrainY(x,z)}/>
+      <TerrainSolid points={rearBench} height={SITE.rearY}/>
+      <TerrainSolid points={leftSlope} height={(x,z)=>SITE.rearY+(SITE.lowerGardenY-SITE.rearY)*(z-back)/(front-back)}/>
+      <TerrainSolid points={rightSlope} height={(x,z)=>SITE.rearY+(SITE.garageApproachY-SITE.rearY)*(z-back)/(1.5-back)}/>
+      <TerrainSolid points={COURTYARD_OUTLINE} height={SITE.courtyardY-.12} sideColor="#a99e88"/>
+      <Plate points={COURTYARD_OUTLINE} y={SITE.courtyardY} depth={.12} color="#c7bda7"/>
+      <Plate points={TERRACE_LINK} y={SITE.courtyardY} depth={.18} color="#c7bda7"/>
+      <TerrainSolid points={[[SITE.rampLeft,SITE.rampStart],[SITE.rampRight,SITE.rampStart],[SITE.rampRight,SITE.rampEnd],[SITE.rampLeft,SITE.rampEnd]]} height={(x,z)=>approachRampY(z)} color="#a9a69a"/>
+      <Plate points={[[9,36],[13.2,36],[13.2,39],[9,39]]} y={SITE.garageApproachY} depth={.15} color="#b5b09f"/>
+      {[5.5,12.5].map(x=><Rail key={x} a={[x,7.4]} b={[x,20]} y={SITE.courtyardY}/>)}
+      <Rail a={[5.5,20]} b={[9,20]} y={SITE.courtyardY}/>
+      <Rail a={[t.accessLeft,t.front]} b={[t.accessLeft,7.4]} y={SITE.courtyardY}/>
+      <Rail a={[t.accessLeft,7.4]} b={[5.5,7.4]} y={SITE.courtyardY}/>
+      <Rail a={[t.accessRight,t.front]} b={[t.accessRight,5]} y={SITE.courtyardY}/>
+      <Rail a={[t.accessRight,5]} b={[7.2,5]} y={SITE.courtyardY}/>
+      <Rail a={[7.2,5]} b={[7.2,7.4]} y={SITE.courtyardY}/>
+      {Array.from({length:6},(_,i)=><Box key={i} at={[6.3+i,SITE.courtyardY+.005,13.7]} size={[.015,.01,12.6]} color="#b2a893"/>)}
+      <Html center position={[8.6,SITE.courtyardY+.2,13.5]} distanceFactor={28} style={{pointerEvents:'none',whiteSpace:'nowrap'}}><div className="model-room-label">Двор · уровень 2 этажа</div></Html>
+    </>}
+    {[-23,-19,33,37].flatMap((x,i)=>[-12,-4,5,15,26].map((z,j)=><Tree key={i+','+j} x={x} z={z} cutaway={cutaway} scale={.85+(i+j)%3*.12}/>))}
+    {[-14,-8,-2,5,12,20,28].map((x,i)=><Tree key={i} x={x} z={-13} cutaway={cutaway} scale={.72}/>)}
+    {[[7,10,SITE.courtyardY],[11,18,SITE.courtyardY],[18,22,SITE.garageApproachY]].filter((_,i)=>!cutaway||i===2).map(([x,z,y],i)=><group key={i}><Box at={[x,y+.37,z]} size={[.15,.74,.15]} color={M.metal}/><Box at={[x,y+.76,z]} size={[.17,.065,.17]} color="#e5c592" emissive={levels.driveway/100*2}/></group>)}
   </group>
 }
 function CameraRig({floor,view,resetKey,tour}) {
@@ -348,7 +395,7 @@ export default function VillaCanvas({floor,levels,selectedGroup,onZoneSelect,pha
     <color attach="background" args={[night?'#26373b':dusk?'#b3ab96':'#cbd8d3']}/><fog attach="fog" args={[night?'#26373b':dusk?'#b3ab96':'#cbd8d3',280,440]}/>
     <ambientLight intensity={night?.42:dusk?.85:1.2}/><hemisphereLight args={['#dce4e2','#847154',night?.55:1.25]}/>
     <directionalLight position={[-20,32,22]} intensity={night?.25:dusk?1.9:2.6} color={night?'#abc5d5':dusk?'#ffe1b5':'#fff6e1'} castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-46} shadow-camera-right={46} shadow-camera-top={46} shadow-camera-bottom={-46} shadow-normalBias={.035} shadow-bias={-.0001}/>
-    <Grounds levels={levels}/>
+    <Grounds levels={levels} cutaway={floor!=='all'}/>
     {floor==='all'?<><House levels={levels}/><Garage levels={levels}/></>:floor==='0'?<Garage levels={levels} plan selectedGroup={selectedGroup} onZoneSelect={onZoneSelect}/>:<FloorPlan floor={Number(floor)} levels={levels} selectedGroup={selectedGroup} onZoneSelect={onZoneSelect}/>}
     <CameraRig floor={floor} view={view} resetKey={resetKey} tour={tour}/>
   </Canvas>

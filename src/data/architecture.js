@@ -59,7 +59,7 @@ const opening = (point, width, height, sill, group, door = false) => ({
 export const OPENINGS = {
   1: [
     ...[305, 453, 603].map(x => opening([x, 864], 1.16, 2.35, .08, 'apartment')),
-    ...[750, 870, 990, 1110].map(x => opening([x, 614], 1.58, 2.2, .12, 'office')),
+    ...[750, 870, 990, 1110].map(x => opening([x, 614], 1.58, x===990?2.32:2.2, x===990?0:.12, 'office', x===990)),
     opening([1270, 776], 1.87, 2.2, .08, 'entry', true),
     ...[1510, 1600].map(x => opening([x, 870], 1.55, 1.37, .8, 'staff')),
     ...[308, 492, 753].map(x => opening([x, 194], 1.36, 1.75, .65, 'apartment')),
@@ -152,12 +152,48 @@ export const TERRACE = {
   width: 458 / PLAN_SCALE,
   depth: 22.51 / (458 / PLAN_SCALE),
   area: 22.51,
-  stairWidth: 1.35,
-  stairSteps: 18,
-  stairTread: .29,
 }
-TERRACE.exitX = TERRACE.x + TERRACE.width - 1.2
 TERRACE.front = TERRACE.z + TERRACE.depth
+TERRACE.accessRight = TERRACE.x+TERRACE.width-.18
+TERRACE.accessLeft = TERRACE.accessRight-.95
+
+// Owner's revised site description: the principal yard is at level 2;
+// the study has its own covered level-1 terrace and four broad steps.
+export const STUDY_TERRACE = {
+  x:TERRACE.x, z:planPoint([696,614])[1]+.12, width:TERRACE.width,
+  depth:TERRACE.front-(planPoint([696,614])[1]+.12),
+  y:LEVELS[1], steps:4, riser:.16, tread:.30,
+}
+STUDY_TERRACE.front=STUDY_TERRACE.z+STUDY_TERRACE.depth
+export const SITE = {
+  courtyardY:LEVELS[2],
+  lowerGardenY:STUDY_TERRACE.y-STUDY_TERRACE.steps*STUDY_TERRACE.riser,
+  garageApproachY:LEVELS[0]-.04,
+  rearY:LEVELS[2],
+  rampStart:20, rampEnd:36, rampLeft:9, rampRight:12.5,
+}
+// Site contours, retaining walls and the route to the lower garage are
+// illustrative, not traced from the interior PDF. The level connector is
+// a deck rather than solid fill: the study terrace/steps stay clear below.
+export const COURTYARD_OUTLINE = [[5.5,7.4],[12.5,7.4],[12.5,20],[5.5,20]]
+export const TERRACE_LINK = [
+  [TERRACE.accessLeft,TERRACE.front], [TERRACE.accessRight,TERRACE.front],
+  [TERRACE.accessRight,5], [7.2,5], [7.2,7.4], [TERRACE.accessLeft,7.4],
+]
+export function approachRampY(z) {
+  const t=Math.max(0,Math.min(1,(z-SITE.rampStart)/(SITE.rampEnd-SITE.rampStart)))
+  return SITE.courtyardY+(SITE.garageApproachY-SITE.courtyardY)*t
+}
+export function terrainY(x,z) {
+  if(z<=-7.4)return SITE.rearY+(-7.4-z)*.24
+  if(z<=planPoint([202,194])[1])return SITE.rearY
+  if(x<-15.4&&z<=planPoint([202,864])[1]) {
+    const back=planPoint([202,194])[1],front=planPoint([202,864])[1]
+    return SITE.rearY+(SITE.lowerGardenY-SITE.rearY)*(z-back)/(front-back)
+  }
+  if(x>13.82&&z<1.5){const back=planPoint([202,194])[1];return SITE.rearY+(SITE.garageApproachY-SITE.rearY)*(z-back)/(1.5-back)}
+  return x>=13.2?SITE.garageApproachY:SITE.lowerGardenY
+}
 
 // Position/orientation on site is the owner's clarification, 7 Nov 2026.
 // A-03/A-18 supply the local shape, not the relative site placement.
