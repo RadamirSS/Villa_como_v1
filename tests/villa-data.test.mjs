@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { FLOORS, FLOOR_AREAS, GROUPS, SCENARIOS, getLevels } from '../src/data/villa.js'
+import { FLOORS, FLOOR_AREAS, GROUPS, SCENARIOS, getLevels, getSourceConfidence } from '../src/data/villa.js'
 
 test('floor selection includes all three levels and separate garage', () => {
   assert.deepEqual(FLOORS.map(f => f.id), ['all', '2', '1', '3', '0'])
@@ -14,7 +14,7 @@ test('demo light groups have stable unique IDs and valid floor assignment', () =
   for (const group of GROUPS) {
     assert.ok([0,1,2,3].includes(group.floor))
     assert.ok(Number.isFinite(group.x) && Number.isFinite(group.z))
-    assert.ok(group.ref.includes('A-'))
+    assert.ok(group.ref.includes('A-') || getSourceConfidence(group).id === 'concept', 'Groups without a source sheet must be explicitly conceptual')
     assert.ok(group.radius > 0)
   }
 })

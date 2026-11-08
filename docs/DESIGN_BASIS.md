@@ -6,6 +6,14 @@ MÈTRE design & architecture, **«Дизайн-проект. Вилла на о�
 
 This repository contains **a visual client demo**, not a CAD/BIM conversion or an electrical installation package. The source PDF in the project context is not redistributed here.
 
+## Verified revision, 7 November 2026
+
+The supplied 94-page PDF has now been inspected directly: the measured, furniture and lighting plans were rendered and visually compared. See [MODEL_AUDIT.md](MODEL_AUDIT.md) for the source-by-source findings, numerical checks and remaining uncertainty. `src/data/architecture.js` replaces the former independent rectangles with calibrated floor traces, room polygons, openings and common elevations.
+
+The garage is a separate one-storey building **to the right when facing the house from the courtyard**, turned 90 degrees, with three gates facing the courtyard. Its floor is at the first-floor elevation; the navigation ID `0` means garage, not basement.
+
+The owner's subsequent clarification supersedes the previous exterior-stair interpretation: **there is no stair to the second-floor terrace**. The main courtyard is at level 2, with level access from the upper terrace. A separate small terrace at the level-1 study entrance has **four steps spanning its full width**. The rear of level 1 abuts the hillside; the ground rises behind the house. These relationships are owner-supplied, not inferred from the interior PDF. Exact lower-terrace dimensions, step rise/run, site contours, retaining walls, access-deck shape and the descent to the lower garage apron are illustrative pending a topographic survey and building sections. The connecting deck leaves the study terrace/steps clear below; raised terrain is hidden in floor-isolation mode so it cannot obscure the interior plans.
+
 ### Architectural references
 
 | PDF sheet | Meaning | Demo use |
@@ -26,7 +34,7 @@ This repository contains **a visual client demo**, not a CAD/BIM conversion or a
 - Level 2: 262.24 m² (A-20), including terrace/balcony **22.51 m²**.
 - Level 3: 66.79 m² (A-21).
 
-The visualization is a **stylized finished villa**: light stone facade, warm pitched roofs, masonry belt courses, illuminated glazing, terrace guardrail/furniture, landscaped grounds and a separate garage. Roof geometry, facade design, elevations, orientation on site, trees and driveway are artist's interpretation: the referenced plan sheets do not confirm the exterior architecture.
+The visualization uses measured-plan outlines, a rounded left bay, the actual L-shaped attic plan, a 22.51 m² terrace, and a +2.930 m second-floor offset. Exterior finish, roof profiles, landscaping and exact site distances remain interpretation. A-06's attic levels are local: the 3.00 m upper storey separation and 0.21 m bedroom step are interpreted pending a building section.
 
 ### Lighting abstractions
 
@@ -34,7 +42,7 @@ Physical wiring is represented as room/area dimmable groups: the UI controls **c
 
 Examples grounded in sheet labeling:
 
-- Level 2 main lounge: A-36 group 8.1–8.9 (visual split into main and accent).
+- Level 2 main lounge: A-36 group 8.1–8.6 main / 8.7–8.9 accent (visual aggregation).
 - Dining: A-36 groups 11.1–11.2.
 - Kitchen: A-36 groups 12.1–12.3.
 - Level 1 study: A-35 groups 11.1–11.4.
@@ -42,6 +50,8 @@ Examples grounded in sheet labeling:
 - Upper floor children's/play area: A-37 groups 2.1–2.2.
 - Upper floor bedroom: A-37 groups 3.1–3.2.
 - Garage: A-34 has gate opening sensors and switching information.
+- Guest bedrooms: A-36 groups 5 and 7; group 6 is the guest bathroom.
+- Terrace: A-36 Б.1; Б.2 is another exterior facade. Courtyard lighting is a demonstration grouping, not a gate sensor circuit.
 
 References marked **“ориентир”** are indicative and must be cross-checked against fully legible source group tags. References marked **“демонстрац.”** are placeholder visualization groupings without asserted circuit equivalence.
 
@@ -70,7 +80,7 @@ Before any live device integration:
 
 ## Acceptance checks
 
-- `npm run build` succeeds.
+- `pnpm run check:geometry` and `pnpm run build` succeed.
 - Every scenario maps all groups to a bounded intensity.
 - `off` returns zero for all groups, `full` returns 100 for all.
 - Selecting a floor changes camera/view and labels; selecting a group zooms to its floor.
